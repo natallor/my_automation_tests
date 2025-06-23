@@ -1,0 +1,537 @@
+Index: pages/base_page.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pages/base_page.py b/pages/base_page.py
+new file mode 100644
+--- /dev/null	(date 1713029740328)
++++ b/pages/base_page.py	(date 1713029740328)
+@@ -0,0 +1,14 @@
++from selenium.webdriver.remote.webdriver import WebDriver
++from selenium.webdriver.support.ui import WebDriverWait
++from selenium.webdriver.support import expected_conditions as EC
++
++
++class BasePage:
++    def __init__(self, driver: WebDriver):
++        self.driver = driver
++
++    def wait_for_element_visibility(self, locator, timeout=20):
++        return WebDriverWait(self.driver, timeout).until(EC.visibility_of_element_located(locator))
++
++    def wait_for_element_clickable(self, locator, timeout=20):
++        return WebDriverWait(self.driver, timeout).until(EC.element_to_be_clickable(locator))
+Index: pages/confirmation_page.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pages/confirmation_page.py b/pages/confirmation_page.py
+new file mode 100644
+--- /dev/null	(date 1713029740292)
++++ b/pages/confirmation_page.py	(date 1713029740292)
+@@ -0,0 +1,31 @@
++from selenium.common import NoSuchElementException
++from pages.base_page import BasePage
++from utils import data
++from utils.locators import Locators_Confirmation_Page
++
++
++class Confirmation_Page(BasePage):
++
++    def enter_location(self):
++        self.wait_for_element_visibility(Locators_Confirmation_Page.Location_Input_XPATH).send_keys(data.Location)
++
++    def click_dropdown(self):
++        self.wait_for_element_clickable(Locators_Confirmation_Page.Dropdown_Location_XPATH).click()
++
++    def click_checkbox(self):
++        self.driver.find_element(*Locators_Confirmation_Page.Checkbox_XPATH).click()
++
++    def click_purchase(self):
++        self.driver.find_element(*Locators_Confirmation_Page.Submit_Purchase_XPATH).click()
++
++    def check_message(self):
++        try:
++            alert_success = self.driver.find_element(*Locators_Confirmation_Page.Alert_Success_Text_CSS)
++            alert_text = alert_success.text
++            expected_alert = "Success!"
++            if alert_text == expected_alert:
++                print("Valid alert found: Success!")
++            else:
++                print("Invalid alert found. Expected: '{}' Actual: '{}'".format(expected_alert, alert_text))
++        except NoSuchElementException:
++            print("No alert found.")
+Index: pages/product_page.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pages/product_page.py b/pages/product_page.py
+new file mode 100644
+--- /dev/null	(date 1713029740317)
++++ b/pages/product_page.py	(date 1713029740317)
+@@ -0,0 +1,37 @@
++from selenium.common import NoSuchElementException
++from pages.base_page import BasePage
++from utils.locators import Shop_Page
++from utils import data
++
++
++class Product_Page(BasePage):
++
++    def phone_search(self):
++        products = self.driver.find_elements(*Shop_Page.Products_XPATH)
++        for product in products:
++            product_name = product.find_element(*Shop_Page.Products_Name_XPATH).text
++            if product_name == "Samsung Note 8":
++                product.find_element(*Shop_Page.Products_Buttons_XPATH).click()
++
++    def click_checkout(self):
++        self.driver.find_element(*Shop_Page.Checkout_Button_XPATH).click()
++
++    def enter_quantity(self):
++        quantity_input = self.driver.find_element(*Shop_Page.Quantity_Input_XPATH)
++        quantity_input.clear()
++        quantity_input.send_keys(*data.Quantity)
++
++    def check_final_amount(self):
++        try:
++            amount_element = self.driver.find_element(*Shop_Page.Check_Amount_CSS)
++            amount_text = amount_element.text
++            expected_amount = "₹. 340000"
++            if amount_text == expected_amount:
++                print("Correct amount found: ₹. 340000")
++            else:
++                print("Incorrect amount found:", amount_text)
++        except NoSuchElementException:
++            print("Amount element not found")
++
++    def click_checkout_last(self):
++        self.driver.find_element(*Shop_Page.Checkout_Last_Button_CSS).click()
+Index: pages/registration_page.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/pages/registration_page.py b/pages/registration_page.py
+new file mode 100644
+--- /dev/null	(date 1713029740312)
++++ b/pages/registration_page.py	(date 1713029740312)
+@@ -0,0 +1,49 @@
++from selenium.common import NoSuchElementException
++from selenium.webdriver.support.select import Select
++from pages.base_page import BasePage
++from utils.locators import Locators_Registration_Page
++from utils import data
++
++
++class Registration_Page(BasePage):
++
++    def enter_name(self):
++        self.driver.find_element(*Locators_Registration_Page.Name_XPATH).send_keys(*data.Name)
++
++    def enter_email(self):
++        self.driver.find_element(*Locators_Registration_Page.Email_XPATH).send_keys(*data.Email)
++
++    def enter_password(self):
++        self.driver.find_element(*Locators_Registration_Page.Password_XPATH).send_keys(*data.Password)
++
++    def click_check(self):
++        self.driver.find_element(*Locators_Registration_Page.Check_Button_XPATH).click()
++
++    def click_gender(self):
++        Select(self.driver.find_element(*Locators_Registration_Page.Dropdown_Gender_XPATH)).select_by_visible_text(
++            "Female")
++
++    def click_employment(self):
++        self.driver.find_element(*Locators_Registration_Page.Employment_Status_XPATH).click()
++
++    def enter_dateofbirth(self):
++        self.driver.find_element(*Locators_Registration_Page.Date_of_Birth_XPATH).send_keys(*data.DateOfBirth)
++
++    def click_submit(self):
++        self.driver.find_element(*Locators_Registration_Page.Submit_Button_XPATH).click()
++
++    def alert_message(self):
++        try:
++            alert_element = self.driver.find_element(*Locators_Registration_Page.Alert_Success_XPATH)
++            alert_text = alert_element.text
++            expected_alert = "Success!"
++            if alert_text == expected_alert:
++                print("Success alert found.")
++            else:
++                print("Alert text does not match the expected message."
++                      " Expected: '{}' Actual: '{}'".format(expected_alert, alert_text))
++        except NoSuchElementException:
++            print("There is no such alert.")
++
++    def click_shop(self):
++        self.driver.find_element(*Locators_Registration_Page.Shop_Button_XPATH).click()
+Index: tests_cases/test_Product_Page.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tests_cases/test_Product_Page.py b/tests_cases/test_Product_Page.py
+new file mode 100644
+--- /dev/null	(date 1713029740336)
++++ b/tests_cases/test_Product_Page.py	(date 1713029740336)
+@@ -0,0 +1,40 @@
++import unittest
++from selenium import webdriver
++from pages.confirmation_page import Confirmation_Page
++from pages.product_page import Product_Page
++from utils.data import Shop
++
++
++class Test_Product_Page_And_Confirmation(unittest.TestCase):
++
++    def setUp(self):
++        self.driver = webdriver.Chrome()
++        self.driver.get(Shop)
++        self.driver.maximize_window()
++
++
++    def test_product_addition(self):
++        add_product = Product_Page(self.driver)
++        add_product.phone_search()
++        add_product.click_checkout()
++        add_product.enter_quantity()
++        add_product.check_final_amount()
++        add_product.click_checkout_last()
++
++
++    def test_confirmation(self):
++        self.test_product_addition()
++        confirmation_with_product = Confirmation_Page(self.driver)
++        confirmation_with_product.enter_location()
++        confirmation_with_product.click_dropdown()
++        confirmation_with_product.click_checkbox()
++        confirmation_with_product.click_purchase()
++        confirmation_with_product.check_message()
++
++
++    def tearDown(self):
++        self.driver.quit()
++
++
++    if __name__ == '__main__':
++        unittest.main()
+\ No newline at end of file
+Index: tests_cases/test_Registration_Page.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/tests_cases/test_Registration_Page.py b/tests_cases/test_Registration_Page.py
+new file mode 100644
+--- /dev/null	(date 1713029740322)
++++ b/tests_cases/test_Registration_Page.py	(date 1713029740322)
+@@ -0,0 +1,34 @@
++import unittest
++from selenium import webdriver
++from pages.registration_page import Registration_Page
++from utils.data import Registration
++
++
++class Test_Registration_Page(unittest.TestCase):
++
++    def setUp(self):
++        self.driver = webdriver.Chrome()
++        self.driver.get(Registration)
++        self.driver.maximize_window()
++
++
++    def test_registration_data(self):
++        data_input = Registration_Page(self.driver)
++        data_input.enter_name()
++        data_input.enter_email()
++        data_input.enter_password()
++        data_input.click_check()
++        data_input.click_gender()
++        data_input.click_employment()
++        data_input.enter_dateofbirth()
++        data_input.click_submit()
++        data_input.alert_message()
++        data_input.click_shop()
++
++
++    def tearDown(self):
++        self.driver.quit()
++
++
++    if __name__ == '__main__':
++        unittest.main()
+Index: .idea/Website testing - Python & Selenium.iml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<module type=\"PYTHON_MODULE\" version=\"4\">\r\n  <component name=\"NewModuleRootManager\">\r\n    <content url=\"file://$MODULE_DIR$\">\r\n      <excludeFolder url=\"file://$MODULE_DIR$/.venv\" />\r\n    </content>\r\n    <orderEntry type=\"inheritedJdk\" />\r\n    <orderEntry type=\"sourceFolder\" forTests=\"false\" />\r\n  </component>\r\n</module>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/Website testing - Python & Selenium.iml b/.idea/Website testing - Python & Selenium.iml
+--- a/.idea/Website testing - Python & Selenium.iml	(revision f99c161e36567f210b91c8108c03aaf3d168b8c5)
++++ b/.idea/Website testing - Python & Selenium.iml	(date 1713029660198)
+@@ -4,7 +4,7 @@
+     <content url="file://$MODULE_DIR$">
+       <excludeFolder url="file://$MODULE_DIR$/.venv" />
+     </content>
+-    <orderEntry type="inheritedJdk" />
++    <orderEntry type="jdk" jdkName="Python 3.12" jdkType="Python SDK" />
+     <orderEntry type="sourceFolder" forTests="false" />
+   </component>
+ </module>
+\ No newline at end of file
+Index: utils/data.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/utils/data.py b/utils/data.py
+new file mode 100644
+--- /dev/null	(date 1713029740306)
++++ b/utils/data.py	(date 1713029740306)
+@@ -0,0 +1,16 @@
++# User data to Registration_Page:
++Name = "Paulina"
++Email = "zawoja@gmail.com"
++Password = "country123"
++DateOfBirth = "17.02.2000"
++Registration = "https://rahulshettyacademy.com/angularpractice/"
++
++
++# Data for Shop Page:
++Quantity = '4'
++Shop = "https://rahulshettyacademy.com/angularpractice/shop"
++
++
++# Data for Confirmation Page:
++Location = "Pol"
++Confirmation = "https://rahulshettyacademy.com/angularpractice/shop"
+Index: utils/locators.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/utils/locators.py b/utils/locators.py
+new file mode 100644
+--- /dev/null	(date 1713029740297)
++++ b/utils/locators.py	(date 1713029740297)
+@@ -0,0 +1,32 @@
++from selenium.webdriver.common.by import By
++
++
++class Locators_Registration_Page:
++    Name_XPATH = (By.XPATH, "//div[@class='form-group']//input[@name='name']")
++    Email_XPATH = (By.XPATH, "//input[@name='email']")
++    Password_XPATH = (By.XPATH, "//input[@id='exampleInputPassword1']")
++    Check_Button_XPATH = (By.XPATH, "//input[@id='exampleCheck1']")
++    Dropdown_Gender_XPATH = (By.XPATH, "//select[@id='exampleFormControlSelect1']")
++    Employment_Status_XPATH = (By.XPATH, "//input[@id='inlineRadio2']")
++    Date_of_Birth_XPATH = (By.XPATH, "//input[@name='bday']")
++    Submit_Button_XPATH = (By.XPATH, "//input[@value='Submit']")
++    Alert_Success_XPATH = (By.XPATH, "//strong[normalize-space()='Success!']")
++    Shop_Button_XPATH = (By.XPATH, "//a[normalize-space()='Shop']")
++
++
++class Shop_Page:
++    Products_XPATH = (By.XPATH, "//div[@class='card h-100']")
++    Products_Name_XPATH = (By.XPATH, "div/h4/a")
++    Products_Buttons_XPATH = (By.XPATH, "div/button")
++    Checkout_Button_XPATH = (By.XPATH, "//a[@class='nav-link btn btn-primary']")
++    Quantity_Input_XPATH = (By.XPATH, "//input[@id='exampleInputEmail1']")
++    Check_Amount_CSS = (By.CSS_SELECTOR, "td[class='text-right'] h3 strong")
++    Checkout_Last_Button_CSS = (By.CSS_SELECTOR, "button[class='btn btn-success']")
++
++
++class Locators_Confirmation_Page:
++    Location_Input_XPATH = (By.XPATH, "//input[@id='country']")
++    Dropdown_Location_XPATH = (By.XPATH, "//a[normalize-space()='Poland']")
++    Checkbox_XPATH = (By.XPATH, "//div[@class='checkbox checkbox-primary']")
++    Submit_Purchase_XPATH = (By.XPATH, "//input[@value='Purchase']")
++    Alert_Success_Text_CSS = (By.CSS_SELECTOR, "div[class='alert alert-success alert-dismissible'] strong")
+Index: .idea/workspace.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ChangeListManager\">\r\n    <list default=\"true\" id=\"1be257a8-776f-44f7-b6c3-fe50b04f9627\" name=\"Changes\" comment=\"\" />\r\n    <option name=\"SHOW_DIALOG\" value=\"false\" />\r\n    <option name=\"HIGHLIGHT_CONFLICTS\" value=\"true\" />\r\n    <option name=\"HIGHLIGHT_NON_ACTIVE_CHANGELIST\" value=\"false\" />\r\n    <option name=\"LAST_RESOLUTION\" value=\"IGNORE\" />\r\n  </component>\r\n  <component name=\"Git.Settings\">\r\n    <option name=\"RECENT_GIT_ROOT_PATH\" value=\"$PROJECT_DIR$\" />\r\n  </component>\r\n  <component name=\"ProjectColorInfo\"><![CDATA[{\r\n  \"associatedIndex\": 6\r\n}]]></component>\r\n  <component name=\"ProjectId\" id=\"2f3UEyT9n4431DfNrTaaTMQWH2z\" />\r\n  <component name=\"ProjectLevelVcsManager\" settingsEditedManually=\"true\" />\r\n  <component name=\"ProjectViewState\">\r\n    <option name=\"hideEmptyMiddlePackages\" value=\"true\" />\r\n    <option name=\"showLibraryContents\" value=\"true\" />\r\n  </component>\r\n  <component name=\"PropertiesComponent\"><![CDATA[{\r\n  \"keyToString\": {\r\n    \"RunOnceActivity.OpenProjectViewOnStart\": \"true\",\r\n    \"RunOnceActivity.ShowReadmeOnStart\": \"true\",\r\n    \"git-widget-placeholder\": \"master\"\r\n  }\r\n}]]></component>\r\n  <component name=\"SharedIndexes\">\r\n    <attachedChunks>\r\n      <set>\r\n        <option value=\"bundled-python-sdk-d68999036c7f-d3b881c8e49f-com.jetbrains.pycharm.community.sharedIndexes.bundled-PC-233.14475.56\" />\r\n      </set>\r\n    </attachedChunks>\r\n  </component>\r\n  <component name=\"SpellCheckerSettings\" RuntimeDictionaries=\"0\" Folders=\"0\" CustomDictionaries=\"0\" DefaultDictionary=\"application-level\" UseSingleDictionary=\"true\" transferred=\"true\" />\r\n  <component name=\"TaskManager\">\r\n    <task active=\"true\" id=\"Default\" summary=\"Default task\">\r\n      <changelist id=\"1be257a8-776f-44f7-b6c3-fe50b04f9627\" name=\"Changes\" comment=\"\" />\r\n      <created>1713029146247</created>\r\n      <option name=\"number\" value=\"Default\" />\r\n      <option name=\"presentableId\" value=\"Default\" />\r\n      <updated>1713029146247</updated>\r\n    </task>\r\n    <servers />\r\n  </component>\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/workspace.xml b/.idea/workspace.xml
+--- a/.idea/workspace.xml	(revision f99c161e36567f210b91c8108c03aaf3d168b8c5)
++++ b/.idea/workspace.xml	(date 1713029969186)
+@@ -1,12 +1,40 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
++  <component name="AutoImportSettings">
++    <option name="autoReloadType" value="SELECTIVE" />
++  </component>
+   <component name="ChangeListManager">
+-    <list default="true" id="1be257a8-776f-44f7-b6c3-fe50b04f9627" name="Changes" comment="" />
++    <list default="true" id="1be257a8-776f-44f7-b6c3-fe50b04f9627" name="Changes" comment="">
++      <change afterPath="$PROJECT_DIR$/drivers/__init__.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/main.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/pages/__init__.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/pages/base_page.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/pages/confirmation_page.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/pages/product_page.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/pages/registration_page.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/reports/__init__.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/tests_cases/__init__.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/tests_cases/test_Product_Page.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/tests_cases/test_Registration_Page.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/utils/__init__.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/utils/data.py" afterDir="false" />
++      <change afterPath="$PROJECT_DIR$/utils/locators.py" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/Website testing - Python &amp; Selenium.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/Website testing - Python &amp; Selenium.iml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
++      <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
++    </list>
+     <option name="SHOW_DIALOG" value="false" />
+     <option name="HIGHLIGHT_CONFLICTS" value="true" />
+     <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+     <option name="LAST_RESOLUTION" value="IGNORE" />
+   </component>
++  <component name="FileTemplateManagerImpl">
++    <option name="RECENT_TEMPLATES">
++      <list>
++        <option value="Python Script" />
++      </list>
++    </option>
++  </component>
+   <component name="Git.Settings">
+     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+   </component>
+@@ -21,11 +49,76 @@
+   </component>
+   <component name="PropertiesComponent"><![CDATA[{
+   "keyToString": {
++    "Python tests.Python tests in test_Product_Page.py.executor": "Run",
++    "Python tests.Python tests in test_Registration_Page.py.executor": "Run",
++    "Python.main.executor": "Run",
+     "RunOnceActivity.OpenProjectViewOnStart": "true",
+     "RunOnceActivity.ShowReadmeOnStart": "true",
+-    "git-widget-placeholder": "master"
++    "git-widget-placeholder": "main",
++    "settings.editor.selected.configurable": "com.jetbrains.python.configuration.PyActiveSdkModuleConfigurable"
+   }
+ }]]></component>
++  <component name="RunManager" selected="Python.main">
++    <configuration name="main" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
++      <module name="Website testing - Python &amp; Selenium" />
++      <option name="ENV_FILES" value="" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <envs>
++        <env name="PYTHONUNBUFFERED" value="1" />
++      </envs>
++      <option name="SDK_HOME" value="" />
++      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
++      <option name="IS_MODULE_SDK" value="true" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/main.py" />
++      <option name="PARAMETERS" value="" />
++      <option name="SHOW_COMMAND_LINE" value="false" />
++      <option name="EMULATE_TERMINAL" value="false" />
++      <option name="MODULE_MODE" value="false" />
++      <option name="REDIRECT_INPUT" value="false" />
++      <option name="INPUT_FILE" value="" />
++      <method v="2" />
++    </configuration>
++    <configuration name="Python tests in test_Product_Page.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
++      <module name="Website testing - Python &amp; Selenium" />
++      <option name="ENV_FILES" value="" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <option name="SDK_HOME" value="" />
++      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests_cases" />
++      <option name="IS_MODULE_SDK" value="true" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="_new_additionalArguments" value="&quot;&quot;" />
++      <option name="_new_target" value="&quot;$PROJECT_DIR$/../Website testing - Python \u0026 Selenium/tests_cases/test_Product_Page.py&quot;" />
++      <option name="_new_targetType" value="&quot;PATH&quot;" />
++      <method v="2" />
++    </configuration>
++    <configuration name="Python tests in test_Registration_Page.py" type="tests" factoryName="Autodetect" temporary="true" nameIsGenerated="true">
++      <module name="Website testing - Python &amp; Selenium" />
++      <option name="ENV_FILES" value="" />
++      <option name="INTERPRETER_OPTIONS" value="" />
++      <option name="PARENT_ENVS" value="true" />
++      <option name="SDK_HOME" value="" />
++      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$/tests_cases" />
++      <option name="IS_MODULE_SDK" value="true" />
++      <option name="ADD_CONTENT_ROOTS" value="true" />
++      <option name="ADD_SOURCE_ROOTS" value="true" />
++      <option name="_new_additionalArguments" value="&quot;&quot;" />
++      <option name="_new_target" value="&quot;$PROJECT_DIR$/../Website testing - Python \u0026 Selenium/tests_cases/test_Registration_Page.py&quot;" />
++      <option name="_new_targetType" value="&quot;PATH&quot;" />
++      <method v="2" />
++    </configuration>
++    <recent_temporary>
++      <list>
++        <item itemvalue="Python.main" />
++        <item itemvalue="Python tests.Python tests in test_Registration_Page.py" />
++        <item itemvalue="Python tests.Python tests in test_Product_Page.py" />
++      </list>
++    </recent_temporary>
++  </component>
+   <component name="SharedIndexes">
+     <attachedChunks>
+       <set>
+Index: .idea/misc.xml
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+><?xml version=\"1.0\" encoding=\"UTF-8\"?>\r\n<project version=\"4\">\r\n  <component name=\"ProjectRootManager\" version=\"2\" project-jdk-name=\"Python 3.12 (Website testing - Python &amp; Selenium) (3)\" project-jdk-type=\"Python SDK\" />\r\n</project>
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/.idea/misc.xml b/.idea/misc.xml
+--- a/.idea/misc.xml	(revision f99c161e36567f210b91c8108c03aaf3d168b8c5)
++++ b/.idea/misc.xml	(date 1713029660355)
+@@ -1,4 +1,7 @@
+ <?xml version="1.0" encoding="UTF-8"?>
+ <project version="4">
+-  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12 (Website testing - Python &amp; Selenium) (3)" project-jdk-type="Python SDK" />
++  <component name="Black">
++    <option name="sdkName" value="Python 3.12 (Website testing - Python &amp; Selenium) (3)" />
++  </component>
++  <component name="ProjectRootManager" version="2" project-jdk-name="Python 3.12" project-jdk-type="Python SDK" />
+ </project>
+\ No newline at end of file
+Index: main.py
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+diff --git a/main.py b/main.py
+new file mode 100644
+--- /dev/null	(date 1713029740344)
++++ b/main.py	(date 1713029740344)
+@@ -0,0 +1,13 @@
++import unittest
++from tests_cases.test_Product_Page import Test_Product_Page_And_Confirmation
++from tests_cases.test_Registration_Page import Test_Registration_Page
++
++if __name__ == "__main__":
++
++    loader = unittest.TestLoader()
++    product_tests_and_confirmation = loader.loadTestsFromTestCase(Test_Product_Page_And_Confirmation)
++    registration_tests = loader.loadTestsFromTestCase(Test_Registration_Page)
++
++    suite = unittest.TestSuite([registration_tests, product_tests_and_confirmation])
++
++    unittest.TextTestRunner(verbosity=2).run(suite)
+diff --git a/drivers/__init__.py b/drivers/__init__.py
+new file mode 100644
+diff --git a/pages/__init__.py b/pages/__init__.py
+new file mode 100644
+diff --git a/reports/__init__.py b/reports/__init__.py
+new file mode 100644
+diff --git a/tests_cases/__init__.py b/tests_cases/__init__.py
+new file mode 100644
+diff --git a/utils/__init__.py b/utils/__init__.py
+new file mode 100644
